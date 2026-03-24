@@ -21,6 +21,8 @@ import { RecentRecordDto } from '../dto/recent-record.dto';
 import { MedicalRoles } from '../../roles/medical-rbac.decorator';
 import { MedicalRole } from '../../roles/medical-roles.enum';
 import { MedicalRbacGuard } from '../../roles/medical-rbac.guard';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { AdminGuard } from '../../auth/guards/admin.guard';
 
 @ApiTags('Records')
 @Controller('records')
@@ -122,5 +124,33 @@ export class RecordsController {
   async findOne(@Param('id') id: string, @Req() req: any) {
     const requesterId = req.user?.userId || req.user?.id;
     return this.recordsService.findOne(id, requesterId);
+  }
+
+  @Get(':id/events')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get raw event stream for a record (admin only)',
+    description:
+      'Returns the full immutable event log for a record in sequence order. ' +
+      'Each event represents a state change. Current state is derived by replaying these events.',
+  })
+  @ApiResponse({ status: 200, description: 'Event stream returned successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthenticated' })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'No events found for this record' })
+  async getEventStream(@Param('id') id: string) {
+    return this.recordsService.getEventStream(id);
+  }
+
+  @Get(':id/state')
+  @ApiOperation({
+    summary: 'Get current record state derived from event replay',
+    description: 'Replays the event stream (using snapshot optimisation) to return current state.',
+  })
+  @ApiResponse({ status: 200, description: 'State derived successfully' })
+  @ApiResponse({ status: 404, description: 'Record not found in event store' })
+  async getStateFromEvents(@Param('id') id: string) {
+    return this.recordsService.getStateFromEvents(id);
   }
 }
