@@ -80,11 +80,6 @@ export class PatientsService {
     });
   }
 
-  /**
-   * -----------------------------
-   * Admit patient
-   * -----------------------------
-   */
   async admit(id: string): Promise<Patient> {
     const patient = await this.findById(id);
     patient.isAdmitted = true;
@@ -99,12 +94,6 @@ export class PatientsService {
     return this.patientRepo.save(patient);
   }
 
-  /**
-   * -----------------------------
-   * Detect duplicate patient
-   * -----------------------------
-   * Checks: nationalId, email, phone, name + DOB
-   */
   private async detectDuplicate(dto: CreatePatientDto): Promise<boolean> {
     const match = await this.patientRepo.findOne({
       where: [
