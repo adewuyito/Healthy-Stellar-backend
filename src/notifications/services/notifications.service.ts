@@ -24,9 +24,6 @@ export class NotificationsService {
     this.emailEnabled =
       this.configService.get<string>('ENABLE_EMAIL_NOTIFICATIONS', 'false') === 'true';
   }
-    private gateway: NotificationsGateway,
-    private templateService: NotificationTemplateService,
-  ) {}
 
   emitRecordAccessed(actorId: string, resourceId: string, metadata?: Record<string, any>): void {
     this.emitEvent({
@@ -78,6 +75,16 @@ export class NotificationsService {
     });
   }
 
+  emitRecordAmended(actorId: string, resourceId: string, metadata?: Record<string, any>): void {
+    this.emitEvent({
+      eventType: NotificationEventType.RECORD_AMENDED,
+      actorId,
+      resourceId,
+      timestamp: new Date(),
+      metadata,
+    });
+  }
+
   async notifyOnChainEvent(
     eventType: NotificationEventType,
     actorId: string,
@@ -113,6 +120,8 @@ export class NotificationsService {
         await this.sendEmailNotification(event, patientId);
       }
     }
+  }
+
   /**
    * Resolve a localized notification message for a patient.
    * Falls back to English when the preferred language is unsupported or the key is missing.
