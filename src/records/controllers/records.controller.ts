@@ -19,10 +19,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { RecordsService } from '../services/records.service';
 import { RecordDownloadService } from '../services/record-download.service';
+import { RecordAttachmentUploadService } from '../services/record-attachment-upload.service';
 import { RelatedRecordsService } from '../services/related-records.service';
 import { RecordVersionService } from '../services/record-version.service';
 import { RecordDiffService } from '../services/record-diff.service';
 import { CreateRecordDto } from '../dto/create-record.dto';
+import { CreateAttachmentDto } from '../dto/create-attachment.dto';
 import { AmendRecordDto } from '../dto/amend-record.dto';
 import { PaginationQueryDto } from '../dto/pagination-query.dto';
 import { PaginatedRecordsResponseDto } from '../dto/paginated-response.dto';
@@ -52,6 +54,7 @@ export class RecordsController {
   constructor(
     private readonly recordsService: RecordsService,
     private readonly recordDownloadService: RecordDownloadService,
+    private readonly recordAttachmentUploadService: RecordAttachmentUploadService,
     private readonly relatedRecordsService: RelatedRecordsService,
     private readonly recordVersionService: RecordVersionService,
     private readonly recordDiffService: RecordDiffService,
