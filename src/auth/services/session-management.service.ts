@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
+import { createHash } from 'crypto';
 import { SessionEntity } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
 
@@ -28,8 +29,14 @@ export class SessionManagementService {
     private userRepository: Repository<User>,
   ) {}
 
+  /** SHA-256 hash a token — the raw value is never persisted. */
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
   /**
-   * Create a new session
+   * Create a new session — only SHA-256 hashes of the tokens are persisted.
+   * The caller retains the raw tokens to return to the client.
    */
   async createSession(
     userId: string,
@@ -43,8 +50,8 @@ export class SessionManagementService {
   ): Promise<SessionEntity> {
     const session = this.sessionRepository.create({
       userId,
-      accessToken,
-      refreshToken,
+      accessTokenHash: this.hashToken(accessToken),
+      refreshTokenHash: this.hashToken(refreshToken),
       expiresAt,
       refreshTokenExpiresAt,
       ipAddress,
@@ -85,7 +92,7 @@ export class SessionManagementService {
   }
 
   /**
-   * Refresh session tokens
+   * Refresh session tokens — stores hashes only.
    */
   async refreshSession(
     sessionId: string,
@@ -108,8 +115,8 @@ export class SessionManagementService {
       throw new UnauthorizedException('Refresh token expired');
     }
 
-    session.accessToken = newAccessToken;
-    session.refreshToken = newRefreshToken;
+    session.accessTokenHash = this.hashToken(newAccessToken);
+    session.refreshTokenHash = this.hashToken(newRefreshToken);
     session.expiresAt = newExpiresAt;
     session.refreshTokenExpiresAt = newRefreshTokenExpiresAt;
 
